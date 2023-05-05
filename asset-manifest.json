@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/mapgeo/static/css/main.19a437cd.css",
+    "main.css": "/mapgeo/static/css/main.e245afab.css",
     "main.js": "/mapgeo/static/js/main.f4b54aa0.js",
     "index.html": "/mapgeo/index.html",
-    "main.19a437cd.css.map": "/mapgeo/static/css/main.19a437cd.css.map",
+    "main.e245afab.css.map": "/mapgeo/static/css/main.e245afab.css.map",
     "main.f4b54aa0.js.map": "/mapgeo/static/js/main.f4b54aa0.js.map"
   },
   "entrypoints": [
-    "static/css/main.19a437cd.css",
+    "static/css/main.e245afab.css",
     "static/js/main.f4b54aa0.js"
   ]
 }
