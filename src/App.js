@@ -174,19 +174,13 @@ const App = () => {
     <div>
       <Flex
         direction="row"
-        justifyContent="space-between"
+        justifyContent="center"
         alignContent="center"
       >
-        <Button gap="0.2rem"  variation="primary">
-          <FaArrowLeft />
-          Regresar
-        </Button>
+       
 
         <Heading level={4}>Flota Vehiculos</Heading>
-        <Button gap="0.2rem"  variation="primary">
-          <FaSignOutAlt />
-          Salir
-        </Button>
+       
       </Flex>
 
       <Flex
