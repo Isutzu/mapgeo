@@ -34,8 +34,10 @@ const App = () => {
 
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [lng, setLng] = useState(-77.02344417415036);
-  const [lat, setLat] = useState(-12.054010087308075);
+  //const [lng, setLng] = useState(-77.02344417415036);
+  const [lng, setLng] = useState(-77.0972645520254);
+  //const [lat, setLat] = useState(-12.054010087308075);
+  const [lat, setLat] = useState(-11.997531152961642);
   const [zoom, setZoom] = useState(14);
 
   useEffect(() => {
@@ -97,6 +99,11 @@ const App = () => {
     });
     const coord = await response.json();
     // console.log("Numero de elementos :" + coord.length )
+    map.current.flyTo({
+      center: [lng, lat],
+      zoom: 11,
+      speed: 0.5,
+    });
     const geojsonRutas = [];
 
     coord.forEach(function (data) {

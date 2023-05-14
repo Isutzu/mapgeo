@@ -13,11 +13,10 @@
     "react-router-dom": "^6.11.1",
     "react-scripts": "^5.0.1"
   },
-  
   "scripts": {
     "start": "react-scripts start",
-    "predeploy" : "npm run build",
-"deploy" : "gh-pages -d build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "build": "react-scripts build"
   },
   "eslintConfig": {
