@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/mapgeo/static/css/main.7c302811.css",
-    "main.js": "/mapgeo/static/js/main.14225e70.js",
+    "main.js": "/mapgeo/static/js/main.0f251391.js",
     "index.html": "/mapgeo/index.html",
     "main.7c302811.css.map": "/mapgeo/static/css/main.7c302811.css.map",
-    "main.14225e70.js.map": "/mapgeo/static/js/main.14225e70.js.map"
+    "main.0f251391.js.map": "/mapgeo/static/js/main.0f251391.js.map"
   },
   "entrypoints": [
     "static/css/main.7c302811.css",
-    "static/js/main.14225e70.js"
+    "static/js/main.0f251391.js"
   ]
 }
