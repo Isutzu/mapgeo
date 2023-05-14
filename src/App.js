@@ -16,7 +16,6 @@ import {
   Button,
   Heading,
   TextField,
-
   FieldGroupIcon,
 } from "@aws-amplify/ui-react";
 import { FaArrowLeft } from "react-icons/fa";
@@ -24,21 +23,14 @@ import { FaSignOutAlt } from "react-icons/fa";
 import { FaMapMarkedAlt, FaCar } from "react-icons/fa";
 import { MdCalendarMonth } from "react-icons/md";
 
-
 import "@aws-amplify/ui-react/styles.css";
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
-
-
-
-
-
+import { printLayers, removeLayers } from "./utils.js";
 mapboxgl.accessToken =
   "pk.eyJ1Ijoib3NjYXJpc21hZWwiLCJhIjoiY2xmbGYycDB2MDE5aTNybzRsNGMwZmM0cCJ9.QdwZE-SVTNUx6AfnHFEWog";
 
 const App = () => {
-  // Esta pequeña funcion permite navegar a la pagina anterior( el boton REGRESAR)
-  
 
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -64,6 +56,7 @@ const App = () => {
     // Es solo para propositos de testeo porque no tengo una base de dynamo . Asi que tuve que crear mi propia data a traves de GET REQUEST
     // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=AL1234
     // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=SC456
+    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta
     const url = `https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta/?placa=${placa}`;
 
     const response = await fetch(url, {
@@ -74,6 +67,7 @@ const App = () => {
     console.log(coord[0].coordinates); // En mi caso mis el json esta dentro de un arreglo de un elemento. Por eso que acceso el elemento 0 y extraigo coordenadas.
     map.current.flyTo({
       center: coord[0].coordinates[0],
+
       speed: 0.5,
     });
     return {
@@ -83,11 +77,73 @@ const App = () => {
           type: "Feature",
           geometry: {
             type: "LineString",
-            coordinates: coord[0].coordinates, //
+            coordinates: coord[0].coordinates,
           },
         },
       ],
     };
+  }
+
+  /*************** getGeoJsonDataRutasCompletas() ********************/
+  async function getGeoJsonDataRutasCompletas() {
+    // El siguiente end point me retorna 3 rutas distintas .En mi caso retorna un arreglo de 3 elementos
+    // Cada elemento contiene un objeto JSON con el numero de placa y coordenadas.
+    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta
+
+    const url = "https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta";
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "content-type": "application/json" },
+    });
+    const coord = await response.json();
+    // console.log("Numero de elementos :" + coord.length )
+    const geojsonRutas = [];
+
+    coord.forEach(function (data) {
+      let coor = data.coordinates;
+      //console.log(coord);
+
+      const geojsonBloque = {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: coor,
+        },
+      };
+      geojsonRutas.push(geojsonBloque);
+      //console.log("GEOJSON", JSON.stringify(geo));
+    });
+
+    //console.log("Este es el geojson:" + geo)
+    return {
+      type: "FeatureCollection",
+      features: geojsonRutas,
+    };
+  }
+
+  /******************** mostrarTodasLasRutas()***************/
+  async function mostrarTodasLasRutas() {
+    const geojsonRutasTotales = await getGeoJsonDataRutasCompletas();
+
+    if (!map.current.getSource("mapa-rutas")) {
+      //console.log(map.current.isSourceLoaded('mapa-rutas'))
+      map.current.addSource("mapa-rutas", {
+        type: "geojson",
+        data: geojsonRutasTotales,
+      });
+    }
+    if (!map.current.getLayer("mapa-rutas-linea")) {
+      console.log("no hay lineas en el mapa ");
+
+      printLayers(map.current, "mapa-rutas", geojsonRutasTotales);
+      //printLayers()
+    } else {
+      console.log(
+        "Si hay lineas en el mapa . Por lo tanto borrarlas e imprimir las nuevas"
+      );
+      removeLayers(map.current);
+      printLayers(map.current, "mapa-rutas", geojsonRutasTotales);
+    }
   }
 
   /******************** mostrarRuta()******************/
@@ -105,66 +161,26 @@ const App = () => {
         data: geojson,
       });
     }
-
-    /******************* printLayers() *******************/
-    function printLayers() {
-      if (map.current.getSource("mapa-rutas")) {
-        //console.log(map.current.isSourceLoaded('mapa-rutas'))
-        map.current.removeSource("mapa-rutas");
-      }
-      map.current.addSource("mapa-rutas", {
-        type: "geojson",
-        data: geojson,
-      });
-
-      map.current.addLayer({
-        id: "mapa-rutas-linea",
-        type: "line",
-        source: "mapa-rutas",
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-        },
-        paint: {
-          "line-color": "#4e8ff8",
-          "line-width": 6,
-        },
-      });
-
-      map.current.addLayer({
-        id: "mapa-rutas-puntos",
-        type: "circle",
-        source: "mapa-rutas",
-        paint: {
-          "circle-radius": 4,
-          "circle-color": "#B42222",
-        },
-      });
-    }
-
-    /******************* removeLayers() *******************/
-    function removeLayers() {
-      map.current.removeLayer("mapa-rutas-linea");
-      map.current.removeLayer("mapa-rutas-puntos");
-    }
     if (!map.current.getLayer("mapa-rutas-linea")) {
       console.log("no hay lineas en el mapa ");
 
-      printLayers();
+      printLayers(map.current, "mapa-rutas", geojson);
     } else {
       console.log(
         "Si hay lineas en el mapa . Por lo tanto borrarlas e imprimir las nuevas"
       );
-      removeLayers();
-      printLayers();
+      removeLayers(map.current);
+      printLayers(map.current, "mapa-rutas", geojson);
     }
   } // final de la funcion  mostrarRuta()
+
 
   /***************** handleSubmit()*************/
   //  Obtener valores de placa y fecha y pasarlos a la funcion mostarRuta()
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
     const placa = event.target.numero_de_placa.value;
     const fecha = event.target.fecha.value;
     mostrarRuta(placa, fecha);
@@ -172,15 +188,8 @@ const App = () => {
 
   return (
     <div>
-      <Flex
-        direction="row"
-        justifyContent="center"
-        alignContent="center"
-      >
-       
-
+      <Flex direction="row" justifyContent="center" alignContent="center">
         <Heading level={4}>Flota Vehiculos</Heading>
-       
       </Flex>
 
       <Flex
@@ -198,7 +207,6 @@ const App = () => {
           errorMessage="hay un error"
           innerEndComponent={
             <FieldGroupIcon ariaLabel="">
-              {/** Accessibility tip: pass empty ariaLabel for decorative icons. */}
               <FaCar />
             </FieldGroupIcon>
           }
@@ -226,6 +234,16 @@ const App = () => {
         >
           <FaMapMarkedAlt />
           Mostrar ruta
+        </Button>
+        <Button
+          //type="submit"
+          gap="0.3rem"
+          variation="warning"
+          className="color-submit-button"
+          onClick={mostrarTodasLasRutas}
+        >
+          <FaMapMarkedAlt />
+          Mostrar Flota
         </Button>
       </Flex>
 
