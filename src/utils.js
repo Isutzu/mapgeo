@@ -33,6 +33,7 @@ export function printLayers(mapaObject, sourceName, datageojson) {
     },
   });
 
+  // Esto es el hotfix branch
 }
 
 /******************* removeLayers() *******************/
