@@ -1,16 +1,3 @@
-/*  - Para usar los iconos . Primero hay que instalarlos de la siguiente forma:
-    npm install react-icons --save
-
-    - Luego ir a la siguiente pagina: 
-      https://react-icons.github.io/react-icons/
-
-      y buscar el icono que deseas
-
-      - el atributo gap="0.3rem" te permite aunmentar la distancia 
-      entre el icono y el texto. Mientras mayor sea el valor en rem (0.3rem, 0.7rem, 1.2rem, etc) mayor sera la distancia.
-
-*/
-
 import {
   Flex,
   Button,
@@ -30,20 +17,38 @@ import {
   getGeojsonFormat,
   generateColor,
   generateRandomColor,
-  printLayers,
-  removeLayers,
 } from "./utils.js";
 mapboxgl.accessToken =
   "pk.eyJ1Ijoib3NjYXJpc21hZWwiLCJhIjoiY2xmbGYycDB2MDE5aTNybzRsNGMwZmM0cCJ9.QdwZE-SVTNUx6AfnHFEWog";
 
-const App = () => {
+export default function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  //const [lng, setLng] = useState(-77.02344417415036);
-  const [lng, setLng] = useState(-77.0972645520254);
-  //const [lat, setLat] = useState(-12.054010087308075);
-  const [lat, setLat] = useState(-11.997531152961642);
-  const [zoom, setZoom] = useState(14);
+  const lng = -77.0972645520254;
+  const lat = -11.997531152961642;
+  const zoom = 14;
+
+  // useEffect(() => {
+  //   if (map.current) return; // initialize map only once
+  //   map.current = new mapboxgl.Map({
+  //     container: mapContainer.current,
+  //     style: "mapbox://styles/mapbox/streets-v12",
+  //     center: [lng, lat],
+  //     zoom: zoom,
+  //   });
+  // });
+  const geojson = {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [[0, 0]],
+        },
+      },
+    ],
+  };
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -53,12 +58,38 @@ const App = () => {
       center: [lng, lat],
       zoom: zoom,
     });
-  });
+
+    map.current.on("load", () => {
+      map.current.addSource("source-mapa-rutas", {
+        type: "geojson",
+        data: geojson,
+      });
+
+      map.current.addLayer({
+        id: "layer-mapa-lineas",
+        type: "line",
+        source: "source-mapa-rutas",
+        paint: {
+          "line-width": 4,
+          "line-color": ["get", "color"],
+        },
+      });
+
+      map.current.addLayer({
+        id: "layer-mapa-circles",
+        type: "circle",
+        source: "source-mapa-rutas",
+        paint: {
+          "circle-radius": 4,
+          "circle-color": "#B42222",
+        },
+      });
+    });
+  }, []);
 
   /*************** getGeoJsonData() ********************/
   async function getGeoJsonData(placa, fecha) {
     // Retorna geojson. Todo lo que esta despues del keyword return es considerado formato geojson
-
     // Esta es el url de nuestra API que regresa en un array que contiene un objeto JSON con el numero de placa y valor de la coordenadas
     // Es solo para propositos de testeo porque no tengo una base de dynamo . Asi que tuve que crear mi propia data a traves de GET REQUEST
     // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=AL1234
@@ -71,10 +102,9 @@ const App = () => {
       headers: { "content-type": "application/json" },
     });
     const coord = await response.json();
-    console.log(coord[0].coordinates); // En mi caso mis el json esta dentro de un arreglo de un elemento. Por eso que acceso el elemento 0 y extraigo coordenadas.
+    console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
     map.current.flyTo({
-      center: coord[0].coordinates[0],
-
+      center: coord[0].coordinates[0], //primera coordenada
       speed: 0.5,
     });
     return {
@@ -83,8 +113,8 @@ const App = () => {
         {
           type: "Feature",
           properties: {
-            color: "#4e8ff8"
-            },
+            color: "#4e8ff8",
+          },
           geometry: {
             type: "LineString",
             coordinates: coord[0].coordinates,
@@ -92,6 +122,12 @@ const App = () => {
         },
       ],
     };
+  }
+
+  /******************** mostrarRuta()******************/
+  async function mostrarRuta(placa, fecha) {
+    const geojson = await getGeoJsonData(placa, fecha);
+    map.current.getSource("source-mapa-rutas").setData(geojson);
   }
 
   /*************** getGeoJsonDataRutasCompletas() ********************/
@@ -141,7 +177,6 @@ const App = () => {
       features: geojsonRutas,
     };
   }
-
   /******************** mostrarTodasLasRutas()***************/
   async function mostrarTodasLasRutas() {
     // let data = [
@@ -190,56 +225,8 @@ const App = () => {
     // let finalResult = Object.values(result);
     //const geojsonRutasTotales = getGeojsonFormat(finalResult);
     const geojsonRutasTotales = await getGeoJsonDataRutasCompletas();
-
-    console.log(geojsonRutasTotales);
-    if (!map.current.getSource("mapa-rutas")) {
-      //console.log(map.current.isSourceLoaded('mapa-rutas'))
-      map.current.addSource("mapa-rutas", {
-        type: "geojson",
-        data: geojsonRutasTotales,
-      });
-    }
-    if (!map.current.getLayer("mapa-rutas-linea")) {
-      console.log("no hay lineas en el mapa ");
-
-      printLayers(map.current, "mapa-rutas", geojsonRutasTotales);
-      //printLayers()
-    } else {
-      console.log(
-        "Si hay lineas en el mapa . Por lo tanto borrarlas e imprimir las nuevas"
-      );
-      removeLayers(map.current);
-      printLayers(map.current, "mapa-rutas", geojsonRutasTotales);
-    }
+    map.current.getSource("source-mapa-rutas").setData(geojsonRutasTotales);
   }
-
-  /******************** mostrarRuta()******************/
-  async function mostrarRuta(placa, fecha) {
-    //console.log(map.current.isSourceLoaded('mapa-rutas'))
-    // alert(`Placa : ${placa} \n  Fecha: ${fecha}`);
-
-    // geojson almacena las coordenadas en formato geojson. Esta variable es el valor de la propiedad  "data" de la funcion addSource()
-    const geojson = await getGeoJsonData(placa, fecha);
-
-    if (!map.current.getSource("mapa-rutas")) {
-      //console.log(map.current.isSourceLoaded('mapa-rutas'))
-      map.current.addSource("mapa-rutas", {
-        type: "geojson",
-        data: geojson,
-      });
-    }
-    if (!map.current.getLayer("mapa-rutas-linea")) {
-      console.log("no hay lineas en el mapa ");
-
-      printLayers(map.current, "mapa-rutas", geojson);
-    } else {
-      console.log(
-        "Si hay lineas en el mapa . Por lo tanto borrarlas e imprimir las nuevas"
-      );
-      removeLayers(map.current);
-      printLayers(map.current, "mapa-rutas", geojson);
-    }
-  } // final de la funcion  mostrarRuta()
 
   /***************** handleSubmit()*************/
   //  Obtener valores de placa y fecha y pasarlos a la funcion mostarRuta()
@@ -251,7 +238,6 @@ const App = () => {
     const fecha = event.target.fecha.value;
     mostrarRuta(placa, fecha);
   };
-
   return (
     <div>
       <Flex direction="row" justifyContent="center" alignContent="center">
@@ -316,6 +302,4 @@ const App = () => {
       <div ref={mapContainer} className="map-container" />
     </div>
   ); //end of return HTML
-}; // end of Flota component
-
-export default App;
+}
