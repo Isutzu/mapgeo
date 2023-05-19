@@ -28,15 +28,7 @@ export default function App() {
   const lat = -11.997531152961642;
   const zoom = 14;
 
-  // useEffect(() => {
-  //   if (map.current) return; // initialize map only once
-  //   map.current = new mapboxgl.Map({
-  //     container: mapContainer.current,
-  //     style: "mapbox://styles/mapbox/streets-v12",
-  //     center: [lng, lat],
-  //     zoom: zoom,
-  //   });
-  // });
+
   const geojson = {
     type: "FeatureCollection",
     features: [
@@ -87,49 +79,6 @@ export default function App() {
     });
   }, []);
 
-  /*************** getGeoJsonData() ********************/
-  async function getGeoJsonData(placa, fecha) {
-    // Retorna geojson. Todo lo que esta despues del keyword return es considerado formato geojson
-    // Esta es el url de nuestra API que regresa en un array que contiene un objeto JSON con el numero de placa y valor de la coordenadas
-    // Es solo para propositos de testeo porque no tengo una base de dynamo . Asi que tuve que crear mi propia data a traves de GET REQUEST
-    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=AL1234
-    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=SC456
-    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta
-    const url = `https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta/?placa=${placa}`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "content-type": "application/json" },
-    });
-    const coord = await response.json();
-    console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
-    map.current.flyTo({
-      center: coord[0].coordinates[0], //primera coordenada
-      speed: 0.5,
-    });
-    return {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {
-            color: "#4e8ff8",
-          },
-          geometry: {
-            type: "LineString",
-            coordinates: coord[0].coordinates,
-          },
-        },
-      ],
-    };
-  }
-
-  /******************** mostrarRuta()******************/
-  async function mostrarRuta(placa, fecha) {
-    const geojson = await getGeoJsonData(placa, fecha);
-    map.current.getSource("source-mapa-rutas").setData(geojson);
-  }
-
   /*************** getGeoJsonDataRutasCompletas() ********************/
   async function getGeoJsonDataRutasCompletas() {
     // El siguiente end point me retorna 3 rutas distintas .En mi caso retorna un arreglo de 3 elementos
@@ -179,53 +128,51 @@ export default function App() {
   }
   /******************** mostrarTodasLasRutas()***************/
   async function mostrarTodasLasRutas() {
-    // let data = [
-    //   [66, -77.02344417415036, -12.054010087308075],
-    //   [66, -77.02361583553322, -12.055017344072041],
-    //   [66, -77.02372328756853, -12.055583114620019],
-    //   [66, -77.02395915829895, -12.056696096941591],
-    //   [66, -77.02421892172019, -12.057858242132719],
-    //   [66, -77.02453248618347, -12.058253914512916],
-    //   [66, -77.02454260116617, -12.058263806314939],
-    //   [66, -77.02499777538709, -12.058323157119437],
-    //   [77, -77.09764303450447, -11.996755463024328],
-    //   [77, -77.09748082772765, -11.997196196217345],
-    //   [77, -77.0972645520254, -11.997531152961642],
-    //   [77, -77.09695816144702, -11.997337230686753],
-    //   [77, -77.09656165599262, -11.99751352367008],
-    //   [77, -77.09625526541426, -11.99763692868899],
-    //   [77, -77.09589480591048, -11.997795592203147],
-    //   [77, -77.09562446128226, -11.997936626358992],
-    //   [77, -77.09492156524952, -11.998183435954076],
-    //   [77, -77.09423669219206, -11.998994380176967],
-    //   [77, -77.09436285301874, -11.998923863384448],
-    //   [77, -77.09490354227468, -11.999840580242662],
-    //   [77, -77.09567853020773, -12.000228421051503],
-    //   [66, -77.02704976368354, -12.058560729981759],
-    //   [66, -77.03014801947108, -12.058995014083504],
-    //   [66, -77.03213090315836, -12.059197006453083],
-    //   [66, -77.0351362113584, -12.059600990722437],
-    //   [66, -77.03551832958989, -12.059439397088584],
-    // ];
-
-    // let result = {};
-
-    // for (let i = 0; i < data.length; i++) {
-    //   let placa = data[i][0].toString();
-    //   let coordinates = data[i].slice(1)
-    //   if (result.hasOwnProperty(placa)) {
-    //      result[placa].coordinates.push(coordinates);
-    //   } else {
-    //     result[placa] = {
-    //             placa: placa,
-    //             coordinates: [coordinates]
-    //           };
-    //   }
-    // }
-    // let finalResult = Object.values(result);
-    //const geojsonRutasTotales = getGeojsonFormat(finalResult);
     const geojsonRutasTotales = await getGeoJsonDataRutasCompletas();
     map.current.getSource("source-mapa-rutas").setData(geojsonRutasTotales);
+  }
+
+  /*************** getGeoJsonData() ********************/
+  async function getGeoJsonData(placa, fecha) {
+    // Retorna geojson. Todo lo que esta despues del keyword return es considerado formato geojson
+    // Esta es el url de nuestra API que regresa en un array que contiene un objeto JSON con el numero de placa y valor de la coordenadas
+    // Es solo para propositos de testeo porque no tengo una base de dynamo . Asi que tuve que crear mi propia data a traves de GET REQUEST
+    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=AL1234
+    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta?placa=SC456
+    // https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta
+    const url = `https://64533f06c18adbbdfe985034.mockapi.io/api/v1/ruta/?placa=${placa}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "content-type": "application/json" },
+    });
+    const coord = await response.json();
+    console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
+    map.current.flyTo({
+      center: coord[0].coordinates[0], //primera coordenada
+      speed: 0.5,
+    });
+    return {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            color: "#4e8ff8",
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: coord[0].coordinates,
+          },
+        },
+      ],
+    };
+  }
+
+  /******************** mostrarRuta()******************/
+  async function mostrarRuta(placa, fecha) {
+    const geojson = await getGeoJsonData(placa, fecha);
+    map.current.getSource("source-mapa-rutas").setData(geojson);
   }
 
   /***************** handleSubmit()*************/
