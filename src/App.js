@@ -28,7 +28,6 @@ export default function App() {
   const lat = -11.997531152961642;
   const zoom = 14;
 
-
   const geojson = {
     type: "FeatureCollection",
     features: [
@@ -76,6 +75,24 @@ export default function App() {
           "circle-color": "#B42222",
         },
       });
+
+      map.current.addLayer({
+        id: "layer-mapa-icono",
+        type: "symbol",
+        source: "source-mapa-rutas",
+        layout: {
+          "icon-image": "bus",
+          "icon-size": 1.2,
+          // 'text-field': ['get','title'],
+          // 'text-font': [
+          //   'Open Sans Semibold',
+          //   'Arial Unicode MS Bold'
+          //   ],
+          //   'text-offset': [0, 1.25],
+          //   'text-anchor': 'top'
+        },
+        filter: ["==", "$type", "Point"],
+      });
     });
   }, []);
 
@@ -105,16 +122,25 @@ export default function App() {
       let coor = data.coordinates;
       //console.log(coord);
       let randomColor = generateColor();
-      const geojsonBloque = {
-        type: "Feature",
-        properties: {
-          color: randomColor,
+      const geojsonBloque = [
+        {
+          type: "Feature",
+          properties: {
+            color: randomColor,
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: coor,
+          },
         },
-        geometry: {
-          type: "LineString",
-          coordinates: coor,
+        {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: coor[coor.length - 1], // ultima coordenada
+          },
         },
-      };
+      ];
 
       geojsonRutas.push(geojsonBloque);
       //console.log("GEOJSON", JSON.stringify(geo));
@@ -123,7 +149,7 @@ export default function App() {
     //console.log("Este es el geojson:" + geo)
     return {
       type: "FeatureCollection",
-      features: geojsonRutas,
+      features: geojsonRutas.flat(),
     };
   }
   /******************** mostrarTodasLasRutas()***************/
@@ -147,7 +173,9 @@ export default function App() {
       headers: { "content-type": "application/json" },
     });
     const coord = await response.json();
-    console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
+    //console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
+    let ultimaCoordenada =
+      coord[0].coordinates[coord[0].coordinates.length - 1]; // ultima coordenada
     map.current.flyTo({
       center: coord[0].coordinates[0], //primera coordenada
       speed: 0.5,
@@ -157,12 +185,22 @@ export default function App() {
       features: [
         {
           type: "Feature",
-          properties: {
-            color: "#4e8ff8",
-          },
           geometry: {
             type: "LineString",
             coordinates: coord[0].coordinates,
+          },
+          properties: {
+            color: "#4e8ff8",
+          },
+        },
+        {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: ultimaCoordenada, // ultima coordenada
+          },
+          properties: {
+            title: "Final",
           },
         },
       ],
