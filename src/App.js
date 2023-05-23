@@ -9,7 +9,8 @@ import { FaArrowLeft } from "react-icons/fa";
 import { FaSignOutAlt } from "react-icons/fa";
 import { FaMapMarkedAlt, FaCar } from "react-icons/fa";
 import { MdCalendarMonth } from "react-icons/md";
-
+import markerIcon from "./mapbox-marker-icon-20px-purple.png";
+import markerIconSVG from "./mapbox-marker-icon-green.svg";
 import "@aws-amplify/ui-react/styles.css";
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
@@ -51,6 +52,15 @@ export default function App() {
     });
 
     map.current.on("load", () => {
+      map.current.loadImage(
+        //'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
+        markerIcon,
+        function (error, image) {
+          if (error) throw error;
+          map.current.addImage("custom-marker", image);
+        }
+      );
+
       map.current.addSource("source-mapa-rutas", {
         type: "geojson",
         data: geojson,
@@ -71,9 +81,14 @@ export default function App() {
         type: "circle",
         source: "source-mapa-rutas",
         paint: {
-          "circle-radius": 4,
-          "circle-color": "#B42222",
+          "circle-color": "#4264fb",
+          "circle-radius": 6,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
         },
+
+        filter: ["==", "$type", "Point"],
+
       });
 
       map.current.addLayer({
@@ -81,17 +96,36 @@ export default function App() {
         type: "symbol",
         source: "source-mapa-rutas",
         layout: {
-          "icon-image": "bus",
-          "icon-size": 1.2,
-          // 'text-field': ['get','title'],
-          // 'text-font': [
-          //   'Open Sans Semibold',
-          //   'Arial Unicode MS Bold'
-          //   ],
-          //   'text-offset': [0, 1.25],
-          //   'text-anchor': 'top'
+          "icon-image": "custom-marker",
+          //  "icon-size": 1.2,
+          // "text-field": ["get", "title"],
+          // "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+          // "text-offset": [0, 1.25],
+          // "text-anchor": "top",
         },
-        filter: ["==", "$type", "Point"],
+        filter: ["==", "icon", "destino"],
+      });
+
+      map.current.on("click", "layer-mapa-circles", (e) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.description;
+
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(description)
+          .addTo(map.current);
+      });
+
+      map.current.on("mouseenter", "layer-mapa-circles", () => {
+        map.current.getCanvas().style.cursor = "pointer";
+      });
+
+      map.current.on("mouseleave", "layer-mapa-circles", () => {
+        map.current.getCanvas().style.cursor = "";
       });
     });
   }, []);
@@ -120,24 +154,33 @@ export default function App() {
 
     coord.forEach(function (data) {
       let coor = data.coordinates;
-      //console.log(coord);
+      //console.log(coor);
       let randomColor = generateColor();
       const geojsonBloque = [
         {
           type: "Feature",
           properties: {
             color: randomColor,
+            title: "Punto en coordenada",
+            description:
+              "<strong>Punto coordenada/strong><p> Este es un punto de coordenada </p>",
           },
           geometry: {
             type: "LineString",
             coordinates: coor,
           },
         },
+       
         {
           type: "Feature",
           geometry: {
             type: "Point",
             coordinates: coor[coor.length - 1], // ultima coordenada
+          },
+          properties: {
+            title: "Destino",
+            description:
+              "<strong>Punto de destino</strong><p> Este es el fin de la ruta. </p>",
           },
         },
       ];
@@ -155,6 +198,29 @@ export default function App() {
   /******************** mostrarTodasLasRutas()***************/
   async function mostrarTodasLasRutas() {
     const geojsonRutasTotales = await getGeoJsonDataRutasCompletas();
+    //añadir click events
+    // map.current.on("click", "layer-mapa-icono", (e) => {
+    //   const coordinates = e.features[0].geometry.coordinates.slice();
+    //   const description = e.features[0].properties.description;
+
+    //   while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    //   }
+
+    //   new mapboxgl.Popup()
+    //     .setLngLat(coordinates)
+    //     .setHTML(description)
+    //     .addTo(map.current);
+    // });
+
+    // map.current.on("mouseenter", "layer-mapa-icono", () => {
+    //   map.current.getCanvas().style.cursor = "pointer";
+    // });
+
+    // map.current.on("mouseleave", "layer-mapa-icono", () => {
+    //   map.current.getCanvas().style.cursor = "";
+    // });
+
     map.current.getSource("source-mapa-rutas").setData(geojsonRutasTotales);
   }
 
@@ -173,37 +239,74 @@ export default function App() {
       headers: { "content-type": "application/json" },
     });
     const coord = await response.json();
+    //console.log(coord);
+    let grupoDeCoordenadas = coord[0].coordinates
     //console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
     let ultimaCoordenada =
       coord[0].coordinates[coord[0].coordinates.length - 1]; // ultima coordenada
+
+    let geojsonUltimaCoordenada = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: ultimaCoordenada, // ultima coordenada
+        },
+        properties: {
+          icon: "destino",
+          "icon-allow-overlap": false,
+          title: "Punto en coordenada",
+          description:
+            "<h3>Numero de placa</h3><p> Este es un punto de coordenada </p>",
+        },
+      },
+    ];
+
+    let geojsonTypeLine = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: coord[0].coordinates,
+        },
+        properties: {
+          color: "#4e8ff8",
+        },
+      },
+    ];
+
+    let geojsonTypePoints = [];
+
+    grupoDeCoordenadas.forEach(function (parDeCoordenadas) {
+      const geojsonBloque = [
+        {
+          type: "Feature",
+          properties: {
+            title: "Punto en coordenada",
+            description:
+              "<h3>Numero de placa</h3><p> Este es un punto de coordenada </p>",
+          },
+          geometry: {
+            type: "Point",
+            coordinates: parDeCoordenadas, //[xxx, yyy]
+          },
+        },
+      ];
+      geojsonTypePoints.push(geojsonBloque);
+    });
+    let geojsonLinePointsIcon = geojsonTypeLine.concat(
+      geojsonTypePoints,
+      geojsonUltimaCoordenada
+    );
+
     map.current.flyTo({
-      center: coord[0].coordinates[0], //primera coordenada
+      center: ultimaCoordenada, //primera coordenada
       speed: 0.5,
+      zoom: 16,
     });
     return {
       type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: coord[0].coordinates,
-          },
-          properties: {
-            color: "#4e8ff8",
-          },
-        },
-        {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: ultimaCoordenada, // ultima coordenada
-          },
-          properties: {
-            title: "Final",
-          },
-        },
-      ],
+      features: geojsonLinePointsIcon.flat(),
     };
   }
 

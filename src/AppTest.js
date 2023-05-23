@@ -43,6 +43,7 @@ export default function App() {
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
     map.current.addSource("source-mapa-rutas", { type: "geojson" });
+    
 
     map.current.addLayer({
       id: "layer-mapa-lineas",
