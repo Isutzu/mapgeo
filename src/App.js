@@ -18,6 +18,7 @@ import {
   getGeojsonFormat,
   generateColor,
   generateRandomColor,
+  getGeojsonTypePoint,
 } from "./utils.js";
 mapboxgl.accessToken =
   "pk.eyJ1Ijoib3NjYXJpc21hZWwiLCJhIjoiY2xmbGYycDB2MDE5aTNybzRsNGMwZmM0cCJ9.QdwZE-SVTNUx6AfnHFEWog";
@@ -150,10 +151,12 @@ export default function App() {
       zoom: 11,
       speed: 0.5,
     });
+
     const geojsonRutas = [];
 
     coord.forEach(function (data) {
-      let coor = data.coordinates;
+      let grupoDeCoordenadas = data.coordinates;
+     let geojsonTypePoint = getGeojsonTypePoint(grupoDeCoordenadas)
       //console.log(coor);
       let randomColor = generateColor();
       const geojsonBloque = [
@@ -161,13 +164,10 @@ export default function App() {
           type: "Feature",
           properties: {
             color: randomColor,
-            title: "Punto en coordenada",
-            description:
-              "<strong>Punto coordenada/strong><p> Este es un punto de coordenada </p>",
           },
           geometry: {
             type: "LineString",
-            coordinates: coor,
+            coordinates: grupoDeCoordenadas,
           },
         },
        
@@ -175,21 +175,19 @@ export default function App() {
           type: "Feature",
           geometry: {
             type: "Point",
-            coordinates: coor[coor.length - 1], // ultima coordenada
+            coordinates: grupoDeCoordenadas[grupoDeCoordenadas.length - 1], // ultima coordenada
           },
           properties: {
-            title: "Destino",
-            description:
-              "<strong>Punto de destino</strong><p> Este es el fin de la ruta. </p>",
+            icon: "destino",
+          
           },
         },
       ];
 
-      geojsonRutas.push(geojsonBloque);
-      //console.log("GEOJSON", JSON.stringify(geo));
+      geojsonRutas.push(geojsonBloque.concat(geojsonTypePoint));
+
     });
 
-    //console.log("Este es el geojson:" + geo)
     return {
       type: "FeatureCollection",
       features: geojsonRutas.flat(),
@@ -198,29 +196,6 @@ export default function App() {
   /******************** mostrarTodasLasRutas()***************/
   async function mostrarTodasLasRutas() {
     const geojsonRutasTotales = await getGeoJsonDataRutasCompletas();
-    //añadir click events
-    // map.current.on("click", "layer-mapa-icono", (e) => {
-    //   const coordinates = e.features[0].geometry.coordinates.slice();
-    //   const description = e.features[0].properties.description;
-
-    //   while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    //   }
-
-    //   new mapboxgl.Popup()
-    //     .setLngLat(coordinates)
-    //     .setHTML(description)
-    //     .addTo(map.current);
-    // });
-
-    // map.current.on("mouseenter", "layer-mapa-icono", () => {
-    //   map.current.getCanvas().style.cursor = "pointer";
-    // });
-
-    // map.current.on("mouseleave", "layer-mapa-icono", () => {
-    //   map.current.getCanvas().style.cursor = "";
-    // });
-
     map.current.getSource("source-mapa-rutas").setData(geojsonRutasTotales);
   }
 
@@ -275,27 +250,10 @@ export default function App() {
       },
     ];
 
-    let geojsonTypePoints = [];
+    let geojsonTypePoint = getGeojsonTypePoint(grupoDeCoordenadas)
 
-    grupoDeCoordenadas.forEach(function (parDeCoordenadas) {
-      const geojsonBloque = [
-        {
-          type: "Feature",
-          properties: {
-            title: "Punto en coordenada",
-            description:
-              "<h3>Numero de placa</h3><p> Este es un punto de coordenada </p>",
-          },
-          geometry: {
-            type: "Point",
-            coordinates: parDeCoordenadas, //[xxx, yyy]
-          },
-        },
-      ];
-      geojsonTypePoints.push(geojsonBloque);
-    });
     let geojsonLinePointsIcon = geojsonTypeLine.concat(
-      geojsonTypePoints,
+      geojsonTypePoint,
       geojsonUltimaCoordenada
     );
 

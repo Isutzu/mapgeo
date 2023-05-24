@@ -1,5 +1,3 @@
-
-
 /**************************** generateRandomColor()********************/
 export function generateRandomColor() {
   // Generar un numero aleatorio entre 0 and 16777215 (tel valor maximode un RGB color)
@@ -76,7 +74,7 @@ export function getGeojsonFormat(infoCoordenadas) {
 }
 /**************************** displayTodasLasRutas()********************/
 export function displayTodasLasRutas() {
- // Esta funcion es para fines de prueba. Simula el formato de la data del dynamoDB
+  // Esta funcion es para fines de prueba. Simula el formato de la data del dynamoDB
   let data = [
     [66, -77.02344417415036, -12.054010087308075],
     [66, -77.02361583553322, -12.055017344072041],
@@ -108,17 +106,43 @@ export function displayTodasLasRutas() {
   let result = {};
   for (let i = 0; i < data.length; i++) {
     let placa = data[i][0].toString();
-    let coordinates = data[i].slice(1)
+    let coordinates = data[i].slice(1);
     if (result.hasOwnProperty(placa)) {
-       result[placa].coordinates.push(coordinates);
+      result[placa].coordinates.push(coordinates);
     } else {
       result[placa] = {
-              placa: placa,
-              coordinates: [coordinates]
-            };
+        placa: placa,
+        coordinates: [coordinates],
+      };
     }
   }
   let finalResult = Object.values(result);
   const geojsonRutasTotales = getGeojsonFormat(finalResult);
-  return geojsonRutasTotales
+  return geojsonRutasTotales;
+}
+
+/**************************** getGeojsonTypePoint()********************/
+export function getGeojsonTypePoint(grupoDeCoordenadas) {
+  let geojsonTypePoint = [];
+
+  grupoDeCoordenadas.forEach(function (parDeCoordenadas) {
+    const geojsonBloque = [
+      {
+        type: "Feature",
+        properties: {
+          title: "Punto en coordenada",
+          description:
+            "<h3>Placa XX-YYYY</h3><p> Fecha y hora irá aquí</p>",
+        },
+        geometry: {
+          type: "Point",
+          coordinates: parDeCoordenadas, //[xxx, yyy]
+        },
+      },
+    ];
+    geojsonTypePoint.push(geojsonBloque);
+  });
+
+  return geojsonTypePoint.flat();
+  //formato [[x,y], [x,y]....]
 }
