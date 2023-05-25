@@ -1,8 +1,8 @@
 import {
   Flex,
-  Button,
+ //Button,
   Heading,
-  TextField,
+  //TextField,
   FieldGroupIcon,
 } from "@aws-amplify/ui-react";
 import { FaArrowLeft } from "react-icons/fa";
@@ -20,6 +20,17 @@ import {
   generateRandomColor,
   getGeojsonTypePoint,
 } from "./utils.js";
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  Rating,
+  TextField,
+  Typography,
+} from "@mui/material";
+
 mapboxgl.accessToken =
   "pk.eyJ1Ijoib3NjYXJpc21hZWwiLCJhIjoiY2xmbGYycDB2MDE5aTNybzRsNGMwZmM0cCJ9.QdwZE-SVTNUx6AfnHFEWog";
 
@@ -89,7 +100,6 @@ export default function App() {
         },
 
         filter: ["==", "$type", "Point"],
-
       });
 
       map.current.addLayer({
@@ -156,7 +166,7 @@ export default function App() {
 
     coord.forEach(function (data) {
       let grupoDeCoordenadas = data.coordinates;
-     let geojsonTypePoint = getGeojsonTypePoint(grupoDeCoordenadas)
+      let geojsonTypePoint = getGeojsonTypePoint(grupoDeCoordenadas);
       //console.log(coor);
       let randomColor = generateColor();
       const geojsonBloque = [
@@ -170,7 +180,7 @@ export default function App() {
             coordinates: grupoDeCoordenadas,
           },
         },
-       
+
         {
           type: "Feature",
           geometry: {
@@ -179,13 +189,11 @@ export default function App() {
           },
           properties: {
             icon: "destino",
-          
           },
         },
       ];
 
       geojsonRutas.push(geojsonBloque.concat(geojsonTypePoint));
-
     });
 
     return {
@@ -215,7 +223,7 @@ export default function App() {
     });
     const coord = await response.json();
     //console.log(coord);
-    let grupoDeCoordenadas = coord[0].coordinates
+    let grupoDeCoordenadas = coord[0].coordinates;
     //console.log(coord[0].coordinates); // En mi caso el json esta dentro de un arreglo de un elemento. Por eso que accedo el elemento 0 y extraigo coordenadas.
     let ultimaCoordenada =
       coord[0].coordinates[coord[0].coordinates.length - 1]; // ultima coordenada
@@ -250,7 +258,7 @@ export default function App() {
       },
     ];
 
-    let geojsonTypePoint = getGeojsonTypePoint(grupoDeCoordenadas)
+    let geojsonTypePoint = getGeojsonTypePoint(grupoDeCoordenadas);
 
     let geojsonLinePointsIcon = geojsonTypeLine.concat(
       geojsonTypePoint,
@@ -286,65 +294,7 @@ export default function App() {
   };
   return (
     <div>
-      <Flex direction="row" justifyContent="center" alignContent="center">
-        <Heading level={4}>Flota Vehiculos</Heading>
-      </Flex>
-
-      <Flex
-        as="form"
-        direction="column"
-        alignItems="center"
-        justifyContent="center"
-        onSubmit={handleSubmit}
-      >
-        <TextField
-          isRequired={true}
-          placeholder="ex: LU12345"
-          label="Numero de placa"
-          name="numero_de_placa"
-          errorMessage="hay un error"
-          innerEndComponent={
-            <FieldGroupIcon ariaLabel="">
-              <FaCar />
-            </FieldGroupIcon>
-          }
-        />
-
-        <TextField
-          isRequired={true}
-          placeholder="01/02/20223"
-          label="Fecha"
-          name="fecha"
-          errorMessage="hay un error"
-          innerEndComponent={
-            <FieldGroupIcon ariaLabel="">
-              <MdCalendarMonth />
-            </FieldGroupIcon>
-          }
-        />
-
-        <Button
-          type="submit"
-          gap="0.3rem"
-          variation="primary"
-          className="color-submit-button"
-          // onClick={mostrarRuta}
-        >
-          <FaMapMarkedAlt />
-          Mostrar ruta
-        </Button>
-        <Button
-          //type="submit"
-          gap="0.3rem"
-          variation="warning"
-          className="color-submit-button"
-          onClick={mostrarTodasLasRutas}
-        >
-          <FaMapMarkedAlt />
-          Mostrar Flota
-        </Button>
-      </Flex>
-
+      
       <div ref={mapContainer} className="map-container" />
     </div>
   ); //end of return HTML
