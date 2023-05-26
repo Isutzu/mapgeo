@@ -1,35 +1,12 @@
-import {
-  Flex,
- //Button,
-  Heading,
-  //TextField,
-  FieldGroupIcon,
-} from "@aws-amplify/ui-react";
-import { FaArrowLeft } from "react-icons/fa";
-import { FaSignOutAlt } from "react-icons/fa";
-import { FaMapMarkedAlt, FaCar } from "react-icons/fa";
 import { MdCalendarMonth } from "react-icons/md";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import markerIcon from "./mapbox-marker-icon-20px-purple.png";
-import markerIconSVG from "./mapbox-marker-icon-green.svg";
 import "@aws-amplify/ui-react/styles.css";
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
-import {
-  getGeojsonFormat,
-  generateColor,
-  generateRandomColor,
-  getGeojsonTypePoint,
-} from "./utils.js";
-import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
-  Rating,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { generateColor, getGeojsonTypePoint } from "./utils.js";
+import FormComponent from "./components/FormComponent";
+import LocalizationProvider from "@mui/lab/LocalizationProvider";
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoib3NjYXJpc21hZWwiLCJhIjoiY2xmbGYycDB2MDE5aTNybzRsNGMwZmM0cCJ9.QdwZE-SVTNUx6AfnHFEWog";
@@ -292,9 +269,10 @@ export default function App() {
     const fecha = event.target.fecha.value;
     mostrarRuta(placa, fecha);
   };
+
   return (
     <div>
-      
+      <FormComponent />
       <div ref={mapContainer} className="map-container" />
     </div>
   ); //end of return HTML
