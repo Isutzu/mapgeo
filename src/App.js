@@ -1,17 +1,28 @@
-import { MdCalendarMonth } from "react-icons/md";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import markerIcon from "./mapbox-marker-icon-20px-purple.png";
-import "@aws-amplify/ui-react/styles.css";
+//import "@aws-amplify/ui-react/styles.css";
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "!mapbox-gl"; // eslint-disable-line import/no-webpack-loader-syntax
 import { generateColor, getGeojsonTypePoint } from "./utils.js";
-import FormComponent from "./components/FormComponent";
-import LocalizationProvider from "@mui/lab/LocalizationProvider";
+import LocalShipping from "@mui/icons-material/LocalShipping";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TextField, Button, Container, Typography, Box } from "@mui/material";
+import Map from "@mui/icons-material/Map";
+import InputAdornment from "@mui/material/InputAdornment";
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import "dayjs/locale/es";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+//import FechaPlacaMui from "./components/FechaPlacaMui";
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoib3NjYXJpc21hZWwiLCJhIjoiY2xmbGYycDB2MDE5aTNybzRsNGMwZmM0cCJ9.QdwZE-SVTNUx6AfnHFEWog";
 
 export default function App() {
+  const [selectedDate, setSelectedDate] = React.useState(dayjs());
   const mapContainer = useRef(null);
   const map = useRef(null);
   const lng = -77.0972645520254;
@@ -180,6 +191,7 @@ export default function App() {
   }
   /******************** mostrarTodasLasRutas()***************/
   async function mostrarTodasLasRutas() {
+    console.log("Function - mostrarTodasLasRutas", selectedDate.format('DD/MM/YYYY'))
     const geojsonRutasTotales = await getGeoJsonDataRutasCompletas();
     map.current.getSource("source-mapa-rutas").setData(geojsonRutasTotales);
   }
@@ -262,17 +274,114 @@ export default function App() {
   /***************** handleSubmit()*************/
   //  Obtener valores de placa y fecha y pasarlos a la funcion mostarRuta()
 
+  // const handleSubmit = (event) => {
+  //   event.preventDefault();
+
+  //   const placa = event.target.numero_de_placa.value;
+  //   const fecha = event.target.fecha.value;
+  //   mostrarRuta(placa, fecha);
+  // };
+
+  
+
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    const placa = event.target.numero_de_placa.value;
-    const fecha = event.target.fecha.value;
+    const data = new FormData(event.currentTarget);
+    let placa = data.get('numero_de_placa')
+    let fecha = selectedDate
+    console.log ('Fecha sin formato:', selectedDate)
+    console.log('Fecha formateada:', selectedDate.format('DD/MM/YYYY'))
+    console.log({
+      placa: data.get('numero_de_placa'),
+    });
+    
     mostrarRuta(placa, fecha);
   };
 
   return (
     <div>
-      <FormComponent />
+        <LocalizationProvider
+          //localeText={esES.components.MuiLocalizationProvider.defaultProps.localeText}
+          dateAdapter={AdapterDayjs}
+          adapterLocale="es"
+        >
+          <Container component="main" maxWidth="xs">
+            {/* <CssBaseline /> */}
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+              component="form" onSubmit={handleSubmit} 
+
+            >
+              <Typography variant="h5" component="h1" align="center">
+                Flota Vehiculos
+              </Typography>
+            
+              <TextField
+                margin="normal"
+                label="placa"
+                name='numero_de_placa'
+                variant="outlined"
+                color="primary"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <LocalShipping />
+                    </InputAdornment>
+                  ),
+                }}
+                required
+                sx={{ mb: 2 }}
+              />
+              <DatePicker
+                //defaultValue={dayjs()}
+                label="fecha"
+                color="primary"
+                name='fecha'
+                sx={{ mb: 2 }}
+                
+                value={selectedDate}
+                onChange = {(newValue) => {
+                    setSelectedDate(newValue)
+                }}
+                // slotsProps = {(params)=> <TextField {...params}/>}
+               // slotProps={{ textField: { InputProps: { color: 'success' } } }}
+               
+              />
+            
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <Button
+                type="submit"
+                variant="contained"
+                startIcon={<Map />}
+                sx={{ mt: 1, mb: 2, p: 1.5 }}
+              >
+                Mostrar Ruta
+              </Button>
+
+              <Button
+                variant="outlined"
+                startIcon={<Map />}
+                sx={{ mb: 2, p: 1.5 }}
+                onClick={mostrarTodasLasRutas}
+              >
+                Mostrar Flota
+              </Button>
+            </Box>
+            </Box>
+          </Container>
+        </LocalizationProvider>
+
       <div ref={mapContainer} className="map-container" />
     </div>
   ); //end of return HTML

@@ -14,3 +14,21 @@
   max-width: 100px;
   font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
 }
+.example-custom-input {
+  padding:20px;
+  background: url("./calendar.svg") no-repeat right ;
+  background-size: 20px;
+  width: 170px;
+  height: 40px;
+  
+  border-radius: 5px;
+}
+
+.example-custom-input1 {
+  background: url("./calendar-svg-icon.svg") no-repeat right;
+  background-size: 10px;
+  padding: 5px;
+  width: 150px;
+  height: 40px;
+  border-radius: 5px;
+}
